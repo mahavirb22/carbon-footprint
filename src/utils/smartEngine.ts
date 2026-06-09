@@ -64,8 +64,9 @@ export async function getSmartResponse(
       throw new Error('API key missing. Please configure VITE_GEMINI_API_KEY in your .env file.');
     }
 
+    // Use gemini-pro as it's globally available and avoids region-specific 404s on 1.5-flash
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
     const totalEmissions = calculateFootprint(footprintData);
 
