@@ -64,9 +64,9 @@ export async function getSmartResponse(
       throw new Error('API key missing. Please configure VITE_GEMINI_API_KEY in your .env file.');
     }
 
-    // Use gemini-2.0-flash as requested by the user
+    // Use the lightweight gemini-1.5-flash-8b model as requested
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash-8b' });
 
     const totalEmissions = calculateFootprint(footprintData);
 
