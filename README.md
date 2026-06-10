@@ -159,6 +159,10 @@ npm install
 # Setup Environment Variables
 # Create a .env file in the root directory and add:
 # VITE_GEMINI_API_KEY=your_gemini_api_key_here
+# VITE_GEMINI_MODEL=gemini-1.5-flash
+
+# If you do not set VITE_GEMINI_MODEL, the app falls back to a supported Gemini model list.
+# Rebuild and redeploy after changing these values so Cloud Run serves the updated bundle.
 
 # Start the development server
 npm run dev

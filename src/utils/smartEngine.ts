@@ -45,6 +45,14 @@ const RESPONSES: Record<string, string> = {
   unknown: "I'm not quite sure I understand. Could you rephrase your question about carbon emissions or footprint reduction?"
 };
 
+const DEFAULT_GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+
+function getGeminiModelCandidates(): string[] {
+  const configuredModel = import.meta.env.VITE_GEMINI_MODEL?.trim();
+  const candidates = configuredModel ? [configuredModel, ...DEFAULT_GEMINI_MODELS] : DEFAULT_GEMINI_MODELS;
+  return [...new Set(candidates.filter(Boolean))];
+}
+
 export async function getSmartResponse(
   userInput: string,
   region: RegionCode,
@@ -64,9 +72,8 @@ export async function getSmartResponse(
       throw new Error('API key missing. Please configure VITE_GEMINI_API_KEY in your .env file.');
     }
 
-    // Use gemini-pro (this is the standard free-tier model that works for your region/account)
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const modelCandidates = getGeminiModelCandidates();
 
     const totalEmissions = calculateFootprint(footprintData);
 
@@ -79,10 +86,27 @@ export async function getSmartResponse(
     `;
 
     const prompt = `${context}\n\nUser Question: ${userInput}`;
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
-    
-    return text || RESPONSES.unknown;
+
+    for (const modelName of modelCandidates) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent(prompt);
+        const text = result.response.text();
+
+        if (text) {
+          return text;
+        }
+      } catch (modelError) {
+        const message = modelError instanceof Error ? modelError.message : String(modelError);
+        const looksLikeMissingModel = /404|not found|not supported/i.test(message);
+
+        if (!looksLikeMissingModel || modelName === modelCandidates[modelCandidates.length - 1]) {
+          throw modelError;
+        }
+      }
+    }
+
+    return RESPONSES.unknown;
   } catch (error) {
     console.error('Gemini API Error:', error);
     return "I'm having trouble connecting to my AI core right now. Please check your API key configuration. However, you can always check the Categories view for general reduction tips!";
