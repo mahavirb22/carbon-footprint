@@ -11,7 +11,7 @@ RUN echo 'server { listen 8080; location / { root /usr/share/nginx/html; index i
 
 # Script to replace the placeholder with the actual runtime environment variable
 RUN echo '#!/bin/sh' > /docker-entrypoint.d/99-replace-env.sh && \
-    echo 'find /usr/share/nginx/html -type f -name "*.js" -exec sed -i "s|VITE_GEMINI_API_KEY_PLACEHOLDER|${VITE_GEMINI_API_KEY}|g" {} +' >> /docker-entrypoint.d/99-replace-env.sh && \
+    echo 'find /usr/share/nginx/html -type f -name "*.js" -exec sed -i -e "s|VITE_GEMINI_API_KEY_PLACEHOLDER|${VITE_GEMINI_API_KEY}|g" -e "s|VITE_GEMINI_MODEL_PLACEHOLDER|${VITE_GEMINI_MODEL}|g" {} +' >> /docker-entrypoint.d/99-replace-env.sh && \
     chmod +x /docker-entrypoint.d/99-replace-env.sh
 
 EXPOSE 8080
