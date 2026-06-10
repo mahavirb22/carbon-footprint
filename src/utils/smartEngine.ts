@@ -72,6 +72,34 @@ function getGeminiModelCandidates(): string[] {
   return [...new Set(candidates.filter(Boolean))];
 }
 
+function buildOfflineAdvice(region: RegionCode, footprintData: UserFootprintData): string {
+  const totals = calculateFootprint(footprintData);
+  const topCategories = Object.entries(totals)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([category]) => category);
+
+  const tipMap: Record<string, string> = {
+    transport: 'Reduce solo car trips, combine errands, and prefer transit/carpool for short-distance travel.',
+    food: 'Lower red meat and dairy frequency, and add more plant-based meals during the week.',
+    energy: 'Set AC/heating efficiently, switch off standby loads, and use LED lighting across rooms.',
+    shopping: 'Buy durable products, repair before replacing, and avoid fast-fashion impulse purchases.'
+  };
+
+  const personalizedTips = topCategories
+    .map(category => tipMap[category])
+    .filter(Boolean)
+    .slice(0, 2);
+
+  const intro = `I cannot reach Gemini right now, but based on your ${region.toUpperCase()} profile I can still suggest high-impact actions.`;
+
+  if (personalizedTips.length === 0) {
+    return `${intro} Start with transport efficiency, reducing food waste, and lowering home electricity use.`;
+  }
+
+  return `${intro} Prioritize: ${personalizedTips.join(' ')}`;
+}
+
 export async function getSmartResponse(
   userInput: string,
   region: RegionCode,
@@ -139,14 +167,14 @@ export async function getSmartResponse(
       const retryDelayMs = parseRetryDelayMs(message);
       geminiBlockedUntil = Date.now() + retryDelayMs;
       const waitSeconds = Math.max(1, Math.ceil(retryDelayMs / 1000));
-      return `Gemini API quota is exceeded for this project right now. Please retry in about ${waitSeconds}s, or enable billing / increase quota in Google AI Studio and regenerate the API key.`;
+      return `${buildOfflineAdvice(region, footprintData)} Gemini API quota is exceeded for this project right now; retry in about ${waitSeconds}s, or enable billing / increase quota in Google AI Studio.`;
     }
 
     if (/404|not found|not supported/i.test(message)) {
-      return "The configured Gemini model is not available for this API key. Set VITE_GEMINI_MODEL to a supported model for your project, rebuild, and redeploy.";
+      return `${buildOfflineAdvice(region, footprintData)} The configured Gemini model is not available for this API key. Set VITE_GEMINI_MODEL to a supported model, then rebuild and redeploy.`;
     }
 
-    return "I'm having trouble connecting to my AI core right now. Please check your API key configuration. However, you can always check the Categories view for general reduction tips!";
+    return `${buildOfflineAdvice(region, footprintData)} I'm having trouble connecting to Gemini at the moment; please verify API key and quota configuration.`;
   }
 }
 
