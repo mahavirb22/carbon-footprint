@@ -171,6 +171,19 @@ npm run dev
 npm run test
 ```
 
+## Gemini API Troubleshooting (404 / 429)
+
+- 404 `models/<name> is not found`: the model is unavailable for your API key/project.
+- 429 `quota exceeded` with `limit: 0`: this project currently has no usable free-tier quota for that model.
+
+Recommended fix path:
+
+1. In Google AI Studio, confirm the API key belongs to the intended GCP project.
+2. In that same project, enable billing (or use a project with available Gemini quota).
+3. Set `VITE_GEMINI_MODEL` to a model shown as available in your project.
+4. Rebuild and redeploy the frontend container. `VITE_*` values are baked at build time.
+5. If still limited, create a new API key in AI Studio under the quota-enabled project and redeploy with that key.
+
 ---
 
 ## 🧪 Future Enhancements

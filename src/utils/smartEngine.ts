@@ -45,7 +45,26 @@ const RESPONSES: Record<string, string> = {
   unknown: "I'm not quite sure I understand. Could you rephrase your question about carbon emissions or footprint reduction?"
 };
 
-const DEFAULT_GEMINI_MODELS = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-2.0-flash'];
+const DEFAULT_GEMINI_MODELS = ['gemini-2.0-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+let geminiBlockedUntil = 0;
+
+function isQuotaError(message: string): boolean {
+  return /429|quota exceeded|rate limit|too many requests/i.test(message);
+}
+
+function parseRetryDelayMs(message: string): number {
+  const retryInMatch = message.match(/retry in\s+([\d.]+)s/i);
+  if (retryInMatch?.[1]) {
+    return Math.ceil(Number(retryInMatch[1]) * 1000);
+  }
+
+  const retryDelayMatch = message.match(/"retryDelay":"(\d+)s"/i);
+  if (retryDelayMatch?.[1]) {
+    return Number(retryDelayMatch[1]) * 1000;
+  }
+
+  return 60_000;
+}
 
 function getGeminiModelCandidates(): string[] {
   const configuredModel = import.meta.env.VITE_GEMINI_MODEL?.trim();
@@ -63,6 +82,11 @@ export async function getSmartResponse(
   // For basic conversational intents, use static responses for efficiency
   if (intent === 'greeting' || intent === 'thanks' || intent === 'unknown') {
     return RESPONSES[intent];
+  }
+
+  if (Date.now() < geminiBlockedUntil) {
+    const waitSeconds = Math.max(1, Math.ceil((geminiBlockedUntil - Date.now()) / 1000));
+    return `Gemini API quota is temporarily exhausted. Please retry in about ${waitSeconds}s. Meanwhile, review the Categories and Next Steps views for actionable guidance.`;
   }
 
   // Use Gemini for complex domain queries
@@ -109,6 +133,19 @@ export async function getSmartResponse(
     return RESPONSES.unknown;
   } catch (error) {
     console.error('Gemini API Error:', error);
+    const message = error instanceof Error ? error.message : String(error);
+
+    if (isQuotaError(message)) {
+      const retryDelayMs = parseRetryDelayMs(message);
+      geminiBlockedUntil = Date.now() + retryDelayMs;
+      const waitSeconds = Math.max(1, Math.ceil(retryDelayMs / 1000));
+      return `Gemini API quota is exceeded for this project right now. Please retry in about ${waitSeconds}s, or enable billing / increase quota in Google AI Studio and regenerate the API key.`;
+    }
+
+    if (/404|not found|not supported/i.test(message)) {
+      return "The configured Gemini model is not available for this API key. Set VITE_GEMINI_MODEL to a supported model for your project, rebuild, and redeploy.";
+    }
+
     return "I'm having trouble connecting to my AI core right now. Please check your API key configuration. However, you can always check the Categories view for general reduction tips!";
   }
 }
