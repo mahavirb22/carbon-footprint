@@ -65,7 +65,8 @@ export async function getSmartResponse(
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const modelName = import.meta.env.VITE_GEMINI_MODEL || 'gemini-2.5-flash';
+    const model = genAI.getGenerativeModel({ model: modelName });
 
     const totalEmissions = calculateFootprint(footprintData);
 

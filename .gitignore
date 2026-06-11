@@ -35,3 +35,7 @@ coverage
 
 # Blueprints (Project Specific)
 blueprints/
+
+# Test output artifacts
+test-output.txt
+test-results.json

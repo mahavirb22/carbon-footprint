@@ -135,6 +135,7 @@ Current static data and localized insights support the following regions:
 
 **Deployment**
 * Vercel (Frontend Hosting)
+* Google Cloud Run (Backend / Containerized Hosting)
 * Docker (Containerization)
 
 ---
@@ -157,7 +158,8 @@ cd carbon-footprint
 npm install
 
 # Setup Environment Variables
-# Create a .env file in the root directory and add:
+cp .env.example .env
+# Then edit .env and add your Google Gemini API key:
 # VITE_GEMINI_API_KEY=your_gemini_api_key_here
 
 # Start the development server
