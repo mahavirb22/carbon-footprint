@@ -42,7 +42,7 @@ export function MainLayout() {
             onChange={(e) => setRegion(e.target.value as RegionCode)}
             className="w-full bg-brand-800 text-sm rounded-lg px-3 py-2 border-transparent focus:ring-2 focus:ring-brand-500"
           >
-            {REGIONS.map(r => <option key={r.code} value={r.code}>{r.label}</option>)}
+            {REGIONS.map(r => <option key={r.code} value={r.code} className="bg-brand-800 text-white">{r.label}</option>)}
           </select>
         </div>
 
