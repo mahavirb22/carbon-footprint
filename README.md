@@ -159,10 +159,6 @@ npm install
 # Setup Environment Variables
 # Create a .env file in the root directory and add:
 # VITE_GEMINI_API_KEY=your_gemini_api_key_here
-# VITE_GEMINI_MODEL=gemini-1.5-flash
-
-# If you do not set VITE_GEMINI_MODEL, the app falls back to a supported Gemini model list.
-# Rebuild and redeploy after changing these values so Cloud Run serves the updated bundle.
 
 # Start the development server
 npm run dev
@@ -170,19 +166,6 @@ npm run dev
 # Run tests
 npm run test
 ```
-
-## Gemini API Troubleshooting (404 / 429)
-
-- 404 `models/<name> is not found`: the model is unavailable for your API key/project.
-- 429 `quota exceeded` with `limit: 0`: this project currently has no usable free-tier quota for that model.
-
-Recommended fix path:
-
-1. In Google AI Studio, confirm the API key belongs to the intended GCP project.
-2. In that same project, enable billing (or use a project with available Gemini quota).
-3. Set `VITE_GEMINI_MODEL` to a model shown as available in your project.
-4. Rebuild and redeploy the frontend container. `VITE_*` values are baked at build time.
-5. If still limited, create a new API key in AI Studio under the quota-enabled project and redeploy with that key.
 
 ---
 
